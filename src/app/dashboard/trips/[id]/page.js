@@ -6,6 +6,7 @@ import AddVaccineForm from "./add-vaccine-form";
 import AddPackingItemForm from "./add-packing-item-form";
 import AddBudgetItemForm from "./add-budget-item-form";
 import DeleteItemButton from "./delete-item-button";
+import TogglePackedCheckbox from "./toggle-packed-checkbox";
 
 export default async function TripDetailPage({ params }) {
   const { id } = await params;
@@ -31,10 +32,10 @@ export default async function TripDetailPage({ params }) {
 
   const [{ data: documents }, { data: vaccines }, { data: packingItems }, { data: budgetItems }] =
     await Promise.all([
-      supabase.from("documents").select("*").eq("trip_id", id),
-      supabase.from("vaccines").select("*").eq("trip_id", id),
-      supabase.from("packing_items").select("*").eq("trip_id", id),
-      supabase.from("budget_items").select("*").eq("trip_id", id),
+      supabase.from("documents").select("*").eq("trip_id", id).order("created_at"),
+      supabase.from("vaccines").select("*").eq("trip_id", id).order("created_at"),
+      supabase.from("packing_items").select("*").eq("trip_id", id).order("created_at"),
+      supabase.from("budget_items").select("*").eq("trip_id", id).order("created_at"),
     ]);
 
   return (
@@ -92,8 +93,12 @@ export default async function TripDetailPage({ params }) {
           {packingItems?.length === 0 && <li className="text-black/60">None yet</li>}
           {packingItems?.map((packingItem) => (
             <li key={packingItem.id} className="flex items-center justify-between gap-2">
-              <span>
-                {packingItem.is_packed ? "✅" : "⬜"} {packingItem.item}
+              <span className="flex items-center gap-2">
+                <TogglePackedCheckbox
+                  id={packingItem.id}
+                  isPacked={packingItem.is_packed}
+                />
+                {packingItem.item}
               </span>
               <DeleteItemButton table="packing_items" id={packingItem.id} />
             </li>

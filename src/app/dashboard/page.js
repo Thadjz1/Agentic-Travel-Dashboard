@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "./sign-out-button";
 import AddTripForm from "./add-trip-form";
+import Timeline from "./timeline";
 import { formatDate } from "@/utils/format-date";
 
 export default async function DashboardPage() {
@@ -27,6 +28,8 @@ export default async function DashboardPage() {
         <h1 className="text-xl font-semibold">Your trips</h1>
         <SignOutButton />
       </div>
+
+      <Timeline trips={trips} />
 
       <AddTripForm />
 

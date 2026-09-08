@@ -1,0 +1,82 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+
+export default function PackingRow({ packingItem }) {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [item, setItem] = useState(packingItem.item);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setLoading(true);
+    await supabase.from("packing_items").update({ item }).eq("id", packingItem.id);
+    setIsEditing(false);
+    setLoading(false);
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    setLoading(true);
+    await supabase.from("packing_items").delete().eq("id", packingItem.id);
+    router.refresh();
+  }
+
+  async function handleTogglePacked(e) {
+    setLoading(true);
+    await supabase
+      .from("packing_items")
+      .update({ is_packed: e.target.checked })
+      .eq("id", packingItem.id);
+    router.refresh();
+    setLoading(false);
+  }
+
+  if (isEditing) {
+    return (
+      <li>
+        <form onSubmit={handleSave} className="flex flex-wrap items-end gap-2">
+          <input
+            required
+            value={item}
+            onChange={(e) => setItem(e.target.value)}
+            className="rounded border border-black/20 bg-white px-2 py-1 text-black"
+          />
+          <button type="submit" disabled={loading} className="rounded bg-black px-3 py-1 text-white disabled:opacity-50">
+            Save
+          </button>
+          <button type="button" onClick={() => setIsEditing(false)} disabled={loading} className="rounded border border-black/20 px-3 py-1">
+            Cancel
+          </button>
+        </form>
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <span className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          defaultChecked={packingItem.is_packed}
+          onChange={handleTogglePacked}
+          disabled={loading}
+        />
+        {packingItem.item}
+      </span>
+      <span className="flex gap-3">
+        <button onClick={() => setIsEditing(true)} className="text-sm underline">
+          Edit
+        </button>
+        <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
+          ✕
+        </button>
+      </span>
+    </li>
+  );
+}

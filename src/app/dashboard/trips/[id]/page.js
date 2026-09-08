@@ -5,8 +5,11 @@ import AddDocumentForm from "./add-document-form";
 import AddVaccineForm from "./add-vaccine-form";
 import AddPackingItemForm from "./add-packing-item-form";
 import AddBudgetItemForm from "./add-budget-item-form";
-import DeleteItemButton from "./delete-item-button";
-import TogglePackedCheckbox from "./toggle-packed-checkbox";
+import DocumentRow from "./document-row";
+import VaccineRow from "./vaccine-row";
+import PackingRow from "./packing-row";
+import BudgetRow from "./budget-row";
+import TripHeader from "./trip-header";
 
 export default async function TripDetailPage({ params }) {
   const { id } = await params;
@@ -44,25 +47,16 @@ export default async function TripDetailPage({ params }) {
         ← Back to trips
       </Link>
 
-      <h1 className="mt-2 mb-6 text-xl font-semibold">
-        {trip.city ? `${trip.city}, ${trip.country}` : trip.country}
-        <span className="ml-2 text-sm font-normal text-black/60">
-          {trip.arrival_date} → {trip.departure_date}
-        </span>
-      </h1>
+      <div className="mt-2">
+        <TripHeader trip={trip} />
+      </div>
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Docs</h2>
         <ul className="space-y-1 text-sm">
           {documents?.length === 0 && <li className="text-black/60">None yet</li>}
           {documents?.map((doc) => (
-            <li key={doc.id} className="flex items-center justify-between gap-2">
-              <span>
-                {doc.title}
-                {doc.doc_type && <span className="text-black/60"> — {doc.doc_type}</span>}
-              </span>
-              <DeleteItemButton table="documents" id={doc.id} />
-            </li>
+            <DocumentRow key={doc.id} doc={doc} />
           ))}
         </ul>
         <AddDocumentForm tripId={id} />
@@ -73,15 +67,7 @@ export default async function TripDetailPage({ params }) {
         <ul className="space-y-1 text-sm">
           {vaccines?.length === 0 && <li className="text-black/60">None yet</li>}
           {vaccines?.map((vaccine) => (
-            <li key={vaccine.id} className="flex items-center justify-between gap-2">
-              <span>
-                {vaccine.name}
-                {vaccine.required_by_date && (
-                  <span className="text-black/60"> — needed by {vaccine.required_by_date}</span>
-                )}
-              </span>
-              <DeleteItemButton table="vaccines" id={vaccine.id} />
-            </li>
+            <VaccineRow key={vaccine.id} vaccine={vaccine} />
           ))}
         </ul>
         <AddVaccineForm tripId={id} />
@@ -92,16 +78,7 @@ export default async function TripDetailPage({ params }) {
         <ul className="space-y-1 text-sm">
           {packingItems?.length === 0 && <li className="text-black/60">None yet</li>}
           {packingItems?.map((packingItem) => (
-            <li key={packingItem.id} className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
-                <TogglePackedCheckbox
-                  id={packingItem.id}
-                  isPacked={packingItem.is_packed}
-                />
-                {packingItem.item}
-              </span>
-              <DeleteItemButton table="packing_items" id={packingItem.id} />
-            </li>
+            <PackingRow key={packingItem.id} packingItem={packingItem} />
           ))}
         </ul>
         <AddPackingItemForm tripId={id} />
@@ -112,15 +89,7 @@ export default async function TripDetailPage({ params }) {
         <ul className="space-y-1 text-sm">
           {budgetItems?.length === 0 && <li className="text-black/60">None yet</li>}
           {budgetItems?.map((budgetItem) => (
-            <li key={budgetItem.id} className="flex items-center justify-between gap-2">
-              <span>
-                {budgetItem.category}
-                {budgetItem.planned_amount != null && (
-                  <span className="text-black/60"> — ${budgetItem.planned_amount}</span>
-                )}
-              </span>
-              <DeleteItemButton table="budget_items" id={budgetItem.id} />
-            </li>
+            <BudgetRow key={budgetItem.id} budgetItem={budgetItem} />
           ))}
         </ul>
         <AddBudgetItemForm tripId={id} />

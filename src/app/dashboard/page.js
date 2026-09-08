@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "./sign-out-button";
 import AddTripForm from "./add-trip-form";
+import { formatDate } from "@/utils/format-date";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -50,7 +51,7 @@ export default async function DashboardPage() {
                 {trip.city ? `${trip.city}, ${trip.country}` : trip.country}
               </div>
               <div className="text-sm text-black/60">
-                {trip.arrival_date} → {trip.departure_date}
+                {formatDate(trip.arrival_date)} → {formatDate(trip.departure_date)}
               </div>
               {trip.visa_length_days != null && (
                 <div className="text-sm text-black/60">

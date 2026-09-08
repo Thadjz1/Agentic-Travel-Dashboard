@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "./sign-out-button";
@@ -40,21 +41,23 @@ export default async function DashboardPage() {
 
       <ul className="space-y-3">
         {trips?.map((trip) => (
-          <li
-            key={trip.id}
-            className="rounded-lg border border-black/10 p-4"
-          >
-            <div className="font-medium">
-              {trip.city ? `${trip.city}, ${trip.country}` : trip.country}
-            </div>
-            <div className="text-sm text-black/60">
-              {trip.arrival_date} → {trip.departure_date}
-            </div>
-            {trip.visa_length_days != null && (
-              <div className="text-sm text-black/60">
-                Visa: {trip.visa_length_days} days
+          <li key={trip.id}>
+            <Link
+              href={`/dashboard/trips/${trip.id}`}
+              className="block rounded-lg border border-black/10 p-4 hover:bg-black/5"
+            >
+              <div className="font-medium">
+                {trip.city ? `${trip.city}, ${trip.country}` : trip.country}
               </div>
-            )}
+              <div className="text-sm text-black/60">
+                {trip.arrival_date} → {trip.departure_date}
+              </div>
+              {trip.visa_length_days != null && (
+                <div className="text-sm text-black/60">
+                  Visa: {trip.visa_length_days} days
+                </div>
+              )}
+            </Link>
           </li>
         ))}
       </ul>

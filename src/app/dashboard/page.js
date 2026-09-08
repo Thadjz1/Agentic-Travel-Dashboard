@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "./sign-out-button";
 import AddTripForm from "./add-trip-form";
 import Timeline from "./timeline";
+import PackingProgress from "./packing-progress";
 import { formatDate } from "@/utils/format-date";
 
 export default async function DashboardPage() {
@@ -21,6 +22,18 @@ export default async function DashboardPage() {
     .from("trips")
     .select("*")
     .order("arrival_date", { ascending: true });
+
+  const { data: packingItems } = await supabase
+    .from("packing_items")
+    .select("trip_id, is_packed");
+
+  function packingProgressFor(tripId) {
+    const items = packingItems?.filter((item) => item.trip_id === tripId) ?? [];
+    return {
+      packed: items.filter((item) => item.is_packed).length,
+      total: items.length,
+    };
+  }
 
   return (
     <div className="mx-auto min-h-screen max-w-2xl bg-white p-6 text-black">
@@ -61,6 +74,7 @@ export default async function DashboardPage() {
                   Visa: {trip.visa_length_days} days
                 </div>
               )}
+              <PackingProgress {...packingProgressFor(trip.id)} />
             </Link>
           </li>
         ))}

@@ -10,6 +10,7 @@ import VaccineRow from "./vaccine-row";
 import PackingRow from "./packing-row";
 import BudgetRow from "./budget-row";
 import TripHeader from "./trip-header";
+import PackingProgress from "@/app/dashboard/packing-progress";
 
 export default async function TripDetailPage({ params }) {
   const { id } = await params;
@@ -49,6 +50,15 @@ export default async function TripDetailPage({ params }) {
 
       <div className="mt-2">
         <TripHeader trip={trip} />
+      </div>
+
+      <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-black/60">
+        <span>{documents?.length ?? 0} documents</span>
+        <span>{vaccines?.length ?? 0} vaccines logged</span>
+        <PackingProgress
+          packed={packingItems?.filter((item) => item.is_packed).length ?? 0}
+          total={packingItems?.length ?? 0}
+        />
       </div>
 
       <section className="mb-8 space-y-3">

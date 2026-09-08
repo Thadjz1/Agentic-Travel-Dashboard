@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SignOutButton from "./sign-out-button";
+import AddTripForm from "./add-trip-form";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -25,6 +26,8 @@ export default async function DashboardPage() {
         <SignOutButton />
       </div>
 
+      <AddTripForm />
+
       {error && (
         <p className="text-sm text-red-600">
           Couldn&apos;t load trips: {error.message}
@@ -32,9 +35,7 @@ export default async function DashboardPage() {
       )}
 
       {!error && trips?.length === 0 && (
-        <p className="text-sm text-black/60">
-          No trips yet. Add a row to the &quot;trips&quot; table in Supabase to see it here.
-        </p>
+        <p className="text-sm text-black/60">No trips yet. Add one above.</p>
       )}
 
       <ul className="space-y-3">
@@ -43,7 +44,9 @@ export default async function DashboardPage() {
             key={trip.id}
             className="rounded-lg border border-black/10 p-4"
           >
-            <div className="font-medium">{trip.country}</div>
+            <div className="font-medium">
+              {trip.city ? `${trip.city}, ${trip.country}` : trip.country}
+            </div>
             <div className="text-sm text-black/60">
               {trip.arrival_date} → {trip.departure_date}
             </div>

@@ -7,7 +7,7 @@ import AddPackingItemForm from "./add-packing-item-form";
 import AddBudgetItemForm from "./add-budget-item-form";
 import DocumentRow from "./document-row";
 import VaccineRow from "./vaccine-row";
-import PackingRow from "./packing-row";
+import PackingList from "./packing-list";
 import BudgetRow from "./budget-row";
 import TripHeader from "./trip-header";
 import PackingProgress from "@/app/dashboard/packing-progress";
@@ -38,7 +38,12 @@ export default async function TripDetailPage({ params }) {
     await Promise.all([
       supabase.from("documents").select("*").eq("trip_id", id).order("created_at"),
       supabase.from("vaccines").select("*").eq("trip_id", id).order("created_at"),
-      supabase.from("packing_items").select("*").eq("trip_id", id).order("created_at"),
+      supabase
+        .from("packing_items")
+        .select("*")
+        .eq("trip_id", id)
+        .order("position", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true }),
       supabase.from("budget_items").select("*").eq("trip_id", id).order("created_at"),
     ]);
 
@@ -85,12 +90,8 @@ export default async function TripDetailPage({ params }) {
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Packing</h2>
-        <ul className="space-y-1 text-sm">
-          {packingItems?.length === 0 && <li className="text-black/60">None yet</li>}
-          {packingItems?.map((packingItem) => (
-            <PackingRow key={packingItem.id} packingItem={packingItem} />
-          ))}
-        </ul>
+        <p className="text-xs text-black/40">Drag items to reorder</p>
+        <PackingList initialItems={packingItems ?? []} />
         <AddPackingItemForm tripId={id} />
       </section>
 

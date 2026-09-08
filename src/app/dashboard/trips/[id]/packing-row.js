@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-export default function PackingRow({ packingItem }) {
+export default function PackingRow({ packingItem, dragHandlers }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -59,8 +59,12 @@ export default function PackingRow({ packingItem }) {
   }
 
   return (
-    <li className="flex items-center justify-between gap-2">
+    <li
+      {...dragHandlers}
+      className="flex cursor-grab items-center justify-between gap-2 active:cursor-grabbing"
+    >
       <span className="flex items-center gap-2">
+        <span className="text-black/30">⠿</span>
         <input
           type="checkbox"
           defaultChecked={packingItem.is_packed}

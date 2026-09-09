@@ -16,6 +16,7 @@ export default function PackingSection({ tripId, initialItems, initialCategories
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setCategories(initialCategories);
@@ -31,25 +32,35 @@ export default function PackingSection({ tripId, initialItems, initialCategories
     e.preventDefault();
     if (!newCategoryName.trim()) return;
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("packing_categories")
       .insert({ trip_id: tripId, name: newCategoryName.trim() });
-    setNewCategoryName("");
+    if (error) {
+      setError(error.message);
+    } else {
+      setNewCategoryName("");
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   async function handleRenameCategory(e) {
     e.preventDefault();
     if (!renameValue.trim() || !selectedCategory) return;
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("packing_categories")
       .update({ name: renameValue.trim() })
       .eq("id", selectedCategory.id);
-    setIsRenaming(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setIsRenaming(false);
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   async function handleDeleteCategory() {
@@ -60,10 +71,18 @@ export default function PackingSection({ tripId, initialItems, initialCategories
     if (!confirmed) return;
 
     setLoading(true);
-    await supabase.from("packing_categories").delete().eq("id", selectedCategory.id);
-    setSelectedCategoryId("all");
+    setError("");
+    const { error } = await supabase
+      .from("packing_categories")
+      .delete()
+      .eq("id", selectedCategory.id);
+    if (error) {
+      setError(error.message);
+    } else {
+      setSelectedCategoryId("all");
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   return (
@@ -146,6 +165,8 @@ export default function PackingSection({ tripId, initialItems, initialCategories
           + Add category
         </button>
       </form>
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <p className="text-xs text-black/40">Drag items to reorder</p>
       <PackingList initialItems={visibleItems} categories={categories} />

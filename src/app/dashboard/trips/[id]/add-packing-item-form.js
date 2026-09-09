@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-export default function AddPackingItemForm({ tripId }) {
+export default function AddPackingItemForm({ tripId, categories = [], defaultCategoryId = "" }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [item, setItem] = useState("");
+  const [categoryId, setCategoryId] = useState(defaultCategoryId);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -20,6 +21,7 @@ export default function AddPackingItemForm({ tripId }) {
     const { error } = await supabase.from("packing_items").insert({
       trip_id: tripId,
       item,
+      category_id: categoryId || null,
     });
 
     if (error) {
@@ -47,6 +49,28 @@ export default function AddPackingItemForm({ tripId }) {
           className="rounded border border-black/20 bg-white px-3 py-2 text-black"
         />
       </div>
+
+      {categories.length > 0 && (
+        <div className="space-y-1">
+          <label htmlFor="packing-category" className="text-sm font-medium">
+            Category
+          </label>
+          <select
+            id="packing-category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="rounded border border-black/20 bg-white px-3 py-2 text-black"
+          >
+            <option value="">Uncategorized</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={loading}

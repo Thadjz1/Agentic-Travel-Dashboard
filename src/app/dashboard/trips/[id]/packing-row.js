@@ -4,18 +4,24 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-export default function PackingRow({ packingItem, dragHandlers }) {
+export default function PackingRow({ packingItem, categories = [], dragHandlers }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [isEditing, setIsEditing] = useState(false);
   const [item, setItem] = useState(packingItem.item);
+  const [categoryId, setCategoryId] = useState(packingItem.category_id ?? "");
   const [loading, setLoading] = useState(false);
+
+  const categoryName = categories.find((c) => c.id === packingItem.category_id)?.name;
 
   async function handleSave(e) {
     e.preventDefault();
     setLoading(true);
-    await supabase.from("packing_items").update({ item }).eq("id", packingItem.id);
+    await supabase
+      .from("packing_items")
+      .update({ item, category_id: categoryId || null })
+      .eq("id", packingItem.id);
     setIsEditing(false);
     setLoading(false);
     router.refresh();
@@ -47,6 +53,20 @@ export default function PackingRow({ packingItem, dragHandlers }) {
             onChange={(e) => setItem(e.target.value)}
             className="rounded border border-black/20 bg-white px-2 py-1 text-black"
           />
+          {categories.length > 0 && (
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="rounded border border-black/20 bg-white px-2 py-1 text-black"
+            >
+              <option value="">Uncategorized</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          )}
           <button type="submit" disabled={loading} className="rounded bg-black px-3 py-1 text-white disabled:opacity-50">
             Save
           </button>
@@ -72,6 +92,7 @@ export default function PackingRow({ packingItem, dragHandlers }) {
           disabled={loading}
         />
         {packingItem.item}
+        {categoryName && <span className="text-xs text-black/40">({categoryName})</span>}
       </span>
       <span className="flex gap-3">
         <button onClick={() => setIsEditing(true)} className="text-sm underline">

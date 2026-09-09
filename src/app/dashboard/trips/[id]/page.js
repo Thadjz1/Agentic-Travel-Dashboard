@@ -3,11 +3,10 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import AddDocumentForm from "./add-document-form";
 import AddVaccineForm from "./add-vaccine-form";
-import AddPackingItemForm from "./add-packing-item-form";
 import AddBudgetItemForm from "./add-budget-item-form";
 import DocumentRow from "./document-row";
 import VaccineRow from "./vaccine-row";
-import PackingList from "./packing-list";
+import PackingSection from "./packing-section";
 import BudgetRow from "./budget-row";
 import TripHeader from "./trip-header";
 import PackingProgress from "@/app/dashboard/packing-progress";
@@ -34,18 +33,24 @@ export default async function TripDetailPage({ params }) {
     notFound();
   }
 
-  const [{ data: documents }, { data: vaccines }, { data: packingItems }, { data: budgetItems }] =
-    await Promise.all([
-      supabase.from("documents").select("*").eq("trip_id", id).order("created_at"),
-      supabase.from("vaccines").select("*").eq("trip_id", id).order("created_at"),
-      supabase
-        .from("packing_items")
-        .select("*")
-        .eq("trip_id", id)
-        .order("position", { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: true }),
-      supabase.from("budget_items").select("*").eq("trip_id", id).order("created_at"),
-    ]);
+  const [
+    { data: documents },
+    { data: vaccines },
+    { data: packingItems },
+    { data: packingCategories },
+    { data: budgetItems },
+  ] = await Promise.all([
+    supabase.from("documents").select("*").eq("trip_id", id).order("created_at"),
+    supabase.from("vaccines").select("*").eq("trip_id", id).order("created_at"),
+    supabase
+      .from("packing_items")
+      .select("*")
+      .eq("trip_id", id)
+      .order("position", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true }),
+    supabase.from("packing_categories").select("*").eq("trip_id", id).order("created_at"),
+    supabase.from("budget_items").select("*").eq("trip_id", id).order("created_at"),
+  ]);
 
   return (
     <div className="mx-auto min-h-screen max-w-2xl bg-white p-6 text-black">
@@ -90,9 +95,11 @@ export default async function TripDetailPage({ params }) {
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Packing</h2>
-        <p className="text-xs text-black/40">Drag items to reorder</p>
-        <PackingList initialItems={packingItems ?? []} />
-        <AddPackingItemForm tripId={id} />
+        <PackingSection
+          tripId={id}
+          initialItems={packingItems ?? []}
+          initialCategories={packingCategories ?? []}
+        />
       </section>
 
       <section className="mb-8 space-y-3">

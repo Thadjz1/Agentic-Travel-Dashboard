@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import PackingRow from "./packing-row";
 
-export default function PackingList({ initialItems }) {
+export default function PackingList({ initialItems, categories = [] }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -50,6 +50,7 @@ export default function PackingList({ initialItems }) {
         <PackingRow
           key={packingItem.id}
           packingItem={packingItem}
+          categories={categories}
           dragHandlers={{
             draggable: true,
             onDragStart: () => setDragIndex(index),

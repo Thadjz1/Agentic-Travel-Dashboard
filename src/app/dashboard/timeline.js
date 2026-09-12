@@ -6,6 +6,46 @@ function toDateNum(dateString) {
   return new Date(`${dateString}T12:00:00Z`).getTime();
 }
 
+// Picks a month step (1, 3, 6, or 12) so the axis shows a handful of
+// readable ticks regardless of whether the trips span months or years.
+function monthTicks(rangeStart, rangeEnd) {
+  const start = new Date(rangeStart);
+  const end = new Date(rangeEnd);
+
+  const totalMonths =
+    (end.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+    (end.getUTCMonth() - start.getUTCMonth());
+
+  let step = 1;
+  if (totalMonths > 8) step = 3;
+  if (totalMonths > 20) step = 6;
+  if (totalMonths > 40) step = 12;
+
+  const ticks = [];
+  let year = start.getUTCFullYear();
+  let month = start.getUTCMonth();
+
+  while (true) {
+    const time = Date.UTC(year, month, 1, 12);
+    if (time > rangeEnd) break;
+    if (time >= rangeStart) {
+      ticks.push({
+        time,
+        label: new Date(time).toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        }),
+      });
+    }
+    month += step;
+    year += Math.floor(month / 12);
+    month = month % 12;
+  }
+
+  return ticks;
+}
+
 export default function Timeline({ trips }) {
   if (!trips || trips.length === 0) return null;
 
@@ -33,8 +73,10 @@ export default function Timeline({ trips }) {
     return ((dateNum - rangeStart) / (rangeEnd - rangeStart)) * 100;
   }
 
+  const ticks = monthTicks(rangeStart, rangeEnd);
+
   return (
-    <div className="mb-10">
+    <div className="mb-20">
       <h2 className="mb-8 font-medium">Timeline</h2>
       <div className="relative h-px bg-black/20">
         <div
@@ -57,6 +99,19 @@ export default function Timeline({ trips }) {
               {trip.city ? `${trip.city}, ${trip.country}` : trip.country}
             </span>
           </Link>
+        ))}
+
+        {ticks.map((tick) => (
+          <div
+            key={tick.time}
+            className="absolute top-10 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: `${percentFor(tick.time)}%` }}
+          >
+            <div className="h-2 w-px bg-black/30" />
+            <span className="mt-1 whitespace-nowrap text-[10px] text-black/50">
+              {tick.label}
+            </span>
+          </div>
         ))}
       </div>
     </div>

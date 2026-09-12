@@ -7,6 +7,7 @@ import AddBudgetItemForm from "./add-budget-item-form";
 import DocumentRow from "./document-row";
 import VaccineRow from "./vaccine-row";
 import PackingSection from "./packing-section";
+import VaccineRecommendations from "./vaccine-recommendations";
 import BudgetRow from "./budget-row";
 import TripHeader from "./trip-header";
 import PackingProgress from "@/app/dashboard/packing-progress";
@@ -84,6 +85,15 @@ export default async function TripDetailPage({ params }) {
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Health</h2>
+
+        <VaccineRecommendations
+          tripId={id}
+          country={trip.country}
+          arrivalDate={trip.arrival_date}
+          existingVaccines={vaccines ?? []}
+        />
+
+        <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>
         <ul className="space-y-1 text-sm">
           {vaccines?.length === 0 && <li className="text-black/60">None yet</li>}
           {vaccines?.map((vaccine) => (

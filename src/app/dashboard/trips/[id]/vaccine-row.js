@@ -32,6 +32,16 @@ export default function VaccineRow({ vaccine }) {
     router.refresh();
   }
 
+  async function handleToggleDone(e) {
+    setLoading(true);
+    await supabase
+      .from("vaccines")
+      .update({ completed_date: e.target.checked ? new Date().toISOString().slice(0, 10) : null })
+      .eq("id", vaccine.id);
+    router.refresh();
+    setLoading(false);
+  }
+
   if (isEditing) {
     return (
       <li>
@@ -61,10 +71,21 @@ export default function VaccineRow({ vaccine }) {
 
   return (
     <li className="flex items-center justify-between gap-2">
-      <span>
+      <span className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          defaultChecked={!!vaccine.completed_date}
+          onChange={handleToggleDone}
+          disabled={loading}
+        />
         {vaccine.name}
+        {vaccine.dose_number && (
+          <span className="text-black/60">
+            (dose {vaccine.dose_number} of {vaccine.total_doses})
+          </span>
+        )}
         {vaccine.required_by_date && (
-          <span className="text-black/60"> — needed by {formatDate(vaccine.required_by_date)}</span>
+          <span className="text-black/60">— needed by {formatDate(vaccine.required_by_date)}</span>
         )}
       </span>
       <span className="flex gap-3">

@@ -19,6 +19,7 @@ export default function VaccineRecommendations({
   country,
   arrivalDate,
   existingVaccines,
+  existingImmunizations,
 }) {
   const recommendations = recommendationsForCountry(country);
 
@@ -40,6 +41,20 @@ export default function VaccineRecommendations({
 
       {recommendations.map((rec) => {
         const multiDose = rec.doses.length > 1;
+        const doses = rec.doses.map((dose, index) => {
+          const requiredByDate = subtractWeeks(arrivalDate, dose.weeksBeforeTravel);
+          return {
+            doseNumber: index + 1,
+            requiredByDate,
+            days: daysUntil(requiredByDate),
+          };
+        });
+        const alreadyImmune = existingImmunizations.some(
+          (im) => im.vaccine_name.toLowerCase() === rec.name.toLowerCase()
+        );
+        const alreadyAdded = existingVaccines.some(
+          (v) => v.name.toLowerCase() === rec.name.toLowerCase()
+        );
 
         return (
           <div key={rec.name} className="rounded-lg border border-black/10 p-3">
@@ -52,47 +67,38 @@ export default function VaccineRecommendations({
             <p className="mt-1 text-sm text-black/70">{rec.description}</p>
             <p className="mt-1 text-xs text-black/50">Caused by: {rec.cause}</p>
 
-            <div className="mt-2 space-y-1">
-              {rec.doses.map((dose, index) => {
-                const doseNumber = index + 1;
-                const targetDate = subtractWeeks(arrivalDate, dose.weeksBeforeTravel);
-                const days = daysUntil(targetDate);
-                const alreadyLogged = existingVaccines.some(
-                  (v) =>
-                    v.name.toLowerCase() === rec.name.toLowerCase() &&
-                    (multiDose ? v.dose_number === doseNumber : true)
-                );
+            {alreadyImmune ? (
+              <p className="mt-2 text-sm text-green-700">
+                ✓ Already have this, from your{" "}
+                <a href="/dashboard/immunizations" className="underline">
+                  immunization history
+                </a>
+              </p>
+            ) : (
+              <>
+                <div className="mt-2 space-y-0.5 text-sm text-black/60">
+                  {doses.map((dose) => (
+                    <div key={dose.doseNumber}>
+                      {multiDose && <span>Dose {dose.doseNumber} of {doses.length}: </span>}
+                      Get by <span className="font-medium text-black">{formatDate(dose.requiredByDate)}</span>{" "}
+                      {dose.days < 0 ? (
+                        <span className="text-red-600">— window has passed</span>
+                      ) : (
+                        <span>({Math.ceil(dose.days / 7)} wks away)</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-                return (
-                  <div key={doseNumber} className="flex flex-wrap items-center gap-2 text-sm">
-                    {multiDose && (
-                      <span className="text-black/60">
-                        Dose {doseNumber} of {rec.doses.length}:
-                      </span>
-                    )}
-                    <span>
-                      Get by <span className="font-medium">{formatDate(targetDate)}</span>
-                    </span>
-                    {days < 0 ? (
-                      <span className="text-red-600">— window has passed</span>
-                    ) : (
-                      <span className="text-black/60">({Math.ceil(days / 7)} wks away)</span>
-                    )}
-                    {alreadyLogged ? (
-                      <span className="text-black/40">✓ In your list</span>
-                    ) : (
-                      <AddSuggestedVaccineButton
-                        tripId={tripId}
-                        name={rec.name}
-                        requiredByDate={targetDate}
-                        doseNumber={multiDose ? doseNumber : null}
-                        totalDoses={multiDose ? rec.doses.length : null}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                <div className="mt-2">
+                  {alreadyAdded ? (
+                    <span className="text-sm text-black/40">✓ Already in your list</span>
+                  ) : (
+                    <AddSuggestedVaccineButton tripId={tripId} name={rec.name} doses={doses} />
+                  )}
+                </div>
+              </>
+            )}
           </div>
         );
       })}

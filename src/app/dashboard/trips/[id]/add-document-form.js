@@ -10,6 +10,7 @@ export default function AddDocumentForm({ tripId }) {
 
   const [title, setTitle] = useState("");
   const [docType, setDocType] = useState("");
+  const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -18,10 +19,31 @@ export default function AddDocumentForm({ tripId }) {
     setLoading(true);
     setError("");
 
+    let filePath = null;
+
+    if (file) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      filePath = `${user.id}/${Date.now()}-${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        setError(uploadError.message);
+        setLoading(false);
+        return;
+      }
+    }
+
     const { error } = await supabase.from("documents").insert({
       trip_id: tripId,
       title,
       doc_type: docType || null,
+      file_path: filePath,
     });
 
     if (error) {
@@ -29,6 +51,7 @@ export default function AddDocumentForm({ tripId }) {
     } else {
       setTitle("");
       setDocType("");
+      setFile(null);
       router.refresh();
     }
 
@@ -60,6 +83,18 @@ export default function AddDocumentForm({ tripId }) {
           onChange={(e) => setDocType(e.target.value)}
           placeholder="e.g. ID, ticket"
           className="rounded border border-black/20 bg-white px-3 py-2 text-black"
+        />
+      </div>
+      <div className="space-y-1">
+        <label htmlFor="doc-file" className="text-sm font-medium">
+          File (optional)
+        </label>
+        <input
+          id="doc-file"
+          type="file"
+          accept="application/pdf,image/*"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          className="text-sm"
         />
       </div>
       <button

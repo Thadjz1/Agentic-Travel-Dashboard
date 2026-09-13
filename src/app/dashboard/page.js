@@ -39,7 +39,12 @@ export default async function DashboardPage() {
     <div className="mx-auto min-h-screen max-w-2xl bg-white p-6 text-black">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Your trips</h1>
-        <SignOutButton />
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/immunizations" className="text-sm underline">
+            Immunization history
+          </Link>
+          <SignOutButton />
+        </div>
       </div>
 
       <Timeline trips={trips} />

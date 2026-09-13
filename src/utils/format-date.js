@@ -22,3 +22,10 @@ export function daysUntil(dateString) {
   const targetNum = new Date(`${dateString}T12:00:00Z`).getTime();
   return Math.round((targetNum - todayNum) / (24 * 60 * 60 * 1000));
 }
+
+// Whole days between two "YYYY-MM-DD" strings.
+export function daysBetween(startDateString, endDateString) {
+  const startNum = new Date(`${startDateString}T12:00:00Z`).getTime();
+  const endNum = new Date(`${endDateString}T12:00:00Z`).getTime();
+  return Math.round((endNum - startNum) / (24 * 60 * 60 * 1000));
+}

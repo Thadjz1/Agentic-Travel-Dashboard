@@ -4,13 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-export default function BudgetRow({ budgetItem }) {
+export default function BudgetRow({ budgetItem, nights }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [isEditing, setIsEditing] = useState(false);
   const [category, setCategory] = useState(budgetItem.category);
   const [plannedAmount, setPlannedAmount] = useState(budgetItem.planned_amount ?? "");
+  const [isPerNight, setIsPerNight] = useState(budgetItem.is_per_night ?? false);
+  const [actualAmount, setActualAmount] = useState(budgetItem.actual_amount ?? "");
   const [loading, setLoading] = useState(false);
 
   async function handleSave(e) {
@@ -21,6 +23,8 @@ export default function BudgetRow({ budgetItem }) {
       .update({
         category,
         planned_amount: plannedAmount ? Number(plannedAmount) : null,
+        is_per_night: isPerNight,
+        actual_amount: actualAmount ? Number(actualAmount) : null,
       })
       .eq("id", budgetItem.id);
     setIsEditing(false);
@@ -50,7 +54,25 @@ export default function BudgetRow({ budgetItem }) {
             step="0.01"
             value={plannedAmount}
             onChange={(e) => setPlannedAmount(e.target.value)}
-            className="w-28 rounded border border-black/20 bg-white px-2 py-1 text-black"
+            placeholder="Planned"
+            className="w-24 rounded border border-black/20 bg-white px-2 py-1 text-black"
+          />
+          <label className="flex items-center gap-1 text-sm text-black/70">
+            <input
+              type="checkbox"
+              checked={isPerNight}
+              onChange={(e) => setIsPerNight(e.target.checked)}
+            />
+            per night{nights ? ` (× ${nights})` : ""}
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={actualAmount}
+            onChange={(e) => setActualAmount(e.target.value)}
+            placeholder="Actual"
+            className="w-24 rounded border border-black/20 bg-white px-2 py-1 text-black"
           />
           <button type="submit" disabled={loading} className="rounded bg-black px-3 py-1 text-white disabled:opacity-50">
             Save
@@ -63,12 +85,34 @@ export default function BudgetRow({ budgetItem }) {
     );
   }
 
+  const plannedTotal =
+    budgetItem.planned_amount != null
+      ? budgetItem.is_per_night && nights
+        ? budgetItem.planned_amount * nights
+        : budgetItem.planned_amount
+      : null;
+
+  const overBudget =
+    plannedTotal != null && budgetItem.actual_amount != null && budgetItem.actual_amount > plannedTotal;
+
   return (
     <li className="flex items-center justify-between gap-2">
       <span>
         {budgetItem.category}
-        {budgetItem.planned_amount != null && (
-          <span className="text-black/60"> — ${budgetItem.planned_amount}</span>
+        {plannedTotal != null && (
+          <span className="text-black/60">
+            {" "}
+            — planned ${plannedTotal.toFixed(2)}
+            {budgetItem.is_per_night && nights && (
+              <span> (${budgetItem.planned_amount}/night × {nights})</span>
+            )}
+          </span>
+        )}
+        {budgetItem.actual_amount != null && (
+          <span className={overBudget ? "text-red-600" : "text-black/60"}>
+            {" "}
+            — actual ${budgetItem.actual_amount}
+          </span>
         )}
       </span>
       <span className="flex gap-3">

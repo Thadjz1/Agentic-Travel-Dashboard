@@ -9,8 +9,10 @@ import VaccineRow from "./vaccine-row";
 import PackingSection from "./packing-section";
 import VaccineRecommendations from "./vaccine-recommendations";
 import BudgetRow from "./budget-row";
+import BudgetSummary from "./budget-summary";
 import TripHeader from "./trip-header";
 import PackingProgress from "@/app/dashboard/packing-progress";
+import { daysBetween } from "@/utils/format-date";
 
 export default async function TripDetailPage({ params }) {
   const { id } = await params;
@@ -34,15 +36,19 @@ export default async function TripDetailPage({ params }) {
     notFound();
   }
 
+  const nights = daysBetween(trip.arrival_date, trip.departure_date);
+
   const [
     { data: documents },
     { data: vaccines },
+    { data: immunizations },
     { data: packingItems },
     { data: packingCategories },
     { data: budgetItems },
   ] = await Promise.all([
     supabase.from("documents").select("*").eq("trip_id", id).order("created_at"),
     supabase.from("vaccines").select("*").eq("trip_id", id).order("created_at"),
+    supabase.from("immunizations").select("*"),
     supabase
       .from("packing_items")
       .select("*")
@@ -85,12 +91,16 @@ export default async function TripDetailPage({ params }) {
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Health</h2>
+        <Link href="/dashboard/immunizations" className="text-sm underline">
+          Manage your immunization history →
+        </Link>
 
         <VaccineRecommendations
           tripId={id}
           country={trip.country}
           arrivalDate={trip.arrival_date}
           existingVaccines={vaccines ?? []}
+          existingImmunizations={immunizations ?? []}
         />
 
         <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>
@@ -114,13 +124,14 @@ export default async function TripDetailPage({ params }) {
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Budget</h2>
+        <BudgetSummary budgetItems={budgetItems ?? []} nights={nights} />
         <ul className="space-y-1 text-sm">
           {budgetItems?.length === 0 && <li className="text-black/60">None yet</li>}
           {budgetItems?.map((budgetItem) => (
-            <BudgetRow key={budgetItem.id} budgetItem={budgetItem} />
+            <BudgetRow key={budgetItem.id} budgetItem={budgetItem} nights={nights} />
           ))}
         </ul>
-        <AddBudgetItemForm tripId={id} />
+        <AddBudgetItemForm tripId={id} nights={nights} />
       </section>
 
       <section className="mb-8 space-y-3">

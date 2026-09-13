@@ -10,6 +10,8 @@ import PackingSection from "./packing-section";
 import VaccineRecommendations from "./vaccine-recommendations";
 import BudgetRow from "./budget-row";
 import BudgetSummary from "./budget-summary";
+import AddExploreItemForm from "./add-explore-item-form";
+import ExploreRow from "./explore-row";
 import TripHeader from "./trip-header";
 import PackingProgress from "@/app/dashboard/packing-progress";
 import { daysBetween } from "@/utils/format-date";
@@ -45,6 +47,7 @@ export default async function TripDetailPage({ params }) {
     { data: packingItems },
     { data: packingCategories },
     { data: budgetItems },
+    { data: exploreItems },
   ] = await Promise.all([
     supabase.from("documents").select("*").eq("trip_id", id).order("created_at"),
     supabase.from("vaccines").select("*").eq("trip_id", id).order("created_at"),
@@ -57,6 +60,7 @@ export default async function TripDetailPage({ params }) {
       .order("created_at", { ascending: true }),
     supabase.from("packing_categories").select("*").eq("trip_id", id).order("created_at"),
     supabase.from("budget_items").select("*").eq("trip_id", id).order("created_at"),
+    supabase.from("explore_items").select("*").eq("trip_id", id).order("created_at"),
   ]);
 
   return (
@@ -136,7 +140,13 @@ export default async function TripDetailPage({ params }) {
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Explore</h2>
-        <p className="text-sm text-black/60">Coming soon.</p>
+        <ul className="space-y-1 text-sm">
+          {exploreItems?.length === 0 && <li className="text-black/60">None yet</li>}
+          {exploreItems?.map((item) => (
+            <ExploreRow key={item.id} item={item} />
+          ))}
+        </ul>
+        <AddExploreItemForm tripId={id} />
       </section>
     </div>
   );

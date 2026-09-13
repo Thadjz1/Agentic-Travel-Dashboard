@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { budgetPeriodOptions } from "@/utils/budget";
 
-export default function AddBudgetItemForm({ tripId, nights }) {
+export default function AddBudgetItemForm({ tripId }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [category, setCategory] = useState("");
   const [plannedAmount, setPlannedAmount] = useState("");
-  const [isPerNight, setIsPerNight] = useState(false);
+  const [budgetPeriod, setBudgetPeriod] = useState("total");
   const [actualAmount, setActualAmount] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export default function AddBudgetItemForm({ tripId, nights }) {
       trip_id: tripId,
       category,
       planned_amount: plannedAmount ? Number(plannedAmount) : null,
-      is_per_night: isPerNight,
+      budget_period: budgetPeriod,
       actual_amount: actualAmount ? Number(actualAmount) : null,
     });
 
@@ -33,7 +34,7 @@ export default function AddBudgetItemForm({ tripId, nights }) {
     } else {
       setCategory("");
       setPlannedAmount("");
-      setIsPerNight(false);
+      setBudgetPeriod("total");
       setActualAmount("");
       router.refresh();
     }
@@ -70,14 +71,23 @@ export default function AddBudgetItemForm({ tripId, nights }) {
           className="w-28 rounded border border-black/20 bg-white px-3 py-2 text-black"
         />
       </div>
-      <label className="flex items-center gap-1 pb-2 text-sm text-black/70">
-        <input
-          type="checkbox"
-          checked={isPerNight}
-          onChange={(e) => setIsPerNight(e.target.checked)}
-        />
-        per night{nights ? ` (× ${nights})` : ""}
-      </label>
+      <div className="space-y-1">
+        <label htmlFor="budget-period" className="text-sm font-medium">
+          Per
+        </label>
+        <select
+          id="budget-period"
+          value={budgetPeriod}
+          onChange={(e) => setBudgetPeriod(e.target.value)}
+          className="rounded border border-black/20 bg-white px-3 py-2 text-black"
+        >
+          {budgetPeriodOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="space-y-1">
         <label htmlFor="budget-actual" className="text-sm font-medium">
           Actual $ spent (optional)

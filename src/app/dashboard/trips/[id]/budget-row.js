@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { plannedTotalFor, budgetPeriodOptions } from "@/utils/budget";
 
 export default function BudgetRow({ budgetItem, nights }) {
   const router = useRouter();
@@ -11,7 +12,7 @@ export default function BudgetRow({ budgetItem, nights }) {
   const [isEditing, setIsEditing] = useState(false);
   const [category, setCategory] = useState(budgetItem.category);
   const [plannedAmount, setPlannedAmount] = useState(budgetItem.planned_amount ?? "");
-  const [isPerNight, setIsPerNight] = useState(budgetItem.is_per_night ?? false);
+  const [budgetPeriod, setBudgetPeriod] = useState(budgetItem.budget_period ?? "total");
   const [actualAmount, setActualAmount] = useState(budgetItem.actual_amount ?? "");
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +24,7 @@ export default function BudgetRow({ budgetItem, nights }) {
       .update({
         category,
         planned_amount: plannedAmount ? Number(plannedAmount) : null,
-        is_per_night: isPerNight,
+        budget_period: budgetPeriod,
         actual_amount: actualAmount ? Number(actualAmount) : null,
       })
       .eq("id", budgetItem.id);
@@ -57,14 +58,17 @@ export default function BudgetRow({ budgetItem, nights }) {
             placeholder="Planned"
             className="w-24 rounded border border-black/20 bg-white px-2 py-1 text-black"
           />
-          <label className="flex items-center gap-1 text-sm text-black/70">
-            <input
-              type="checkbox"
-              checked={isPerNight}
-              onChange={(e) => setIsPerNight(e.target.checked)}
-            />
-            per night{nights ? ` (× ${nights})` : ""}
-          </label>
+          <select
+            value={budgetPeriod}
+            onChange={(e) => setBudgetPeriod(e.target.value)}
+            className="rounded border border-black/20 bg-white px-2 py-1 text-black"
+          >
+            {budgetPeriodOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <input
             type="number"
             min="0"
@@ -85,13 +89,8 @@ export default function BudgetRow({ budgetItem, nights }) {
     );
   }
 
-  const plannedTotal =
-    budgetItem.planned_amount != null
-      ? budgetItem.is_per_night && nights
-        ? budgetItem.planned_amount * nights
-        : budgetItem.planned_amount
-      : null;
-
+  const plannedTotal = budgetItem.planned_amount != null ? plannedTotalFor(budgetItem, nights) : null;
+  const isScaled = budgetItem.budget_period && budgetItem.budget_period !== "total";
   const overBudget =
     plannedTotal != null && budgetItem.actual_amount != null && budgetItem.actual_amount > plannedTotal;
 
@@ -103,8 +102,8 @@ export default function BudgetRow({ budgetItem, nights }) {
           <span className="text-black/60">
             {" "}
             — planned ${plannedTotal.toFixed(2)}
-            {budgetItem.is_per_night && nights && (
-              <span> (${budgetItem.planned_amount}/night × {nights})</span>
+            {isScaled && (
+              <span> (${budgetItem.planned_amount}/{budgetItem.budget_period})</span>
             )}
           </span>
         )}

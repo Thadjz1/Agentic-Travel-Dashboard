@@ -41,6 +41,12 @@ export default async function TripDetailPage({ params }) {
 
   const nights = daysBetween(trip.arrival_date, trip.departure_date);
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("nationality")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const [
     { data: documents },
     { data: vaccines },
@@ -90,6 +96,7 @@ export default async function TripDetailPage({ params }) {
           tripId={id}
           country={trip.country}
           existingDocuments={documents ?? []}
+          nationality={profile?.nationality ?? null}
         />
 
         <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>

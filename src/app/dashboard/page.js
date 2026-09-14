@@ -27,6 +27,12 @@ export default async function DashboardPage() {
     .from("packing_items")
     .select("trip_id, is_packed");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("nationality")
+    .eq("id", user.id)
+    .maybeSingle();
+
   function packingProgressFor(tripId) {
     const items = packingItems?.filter((item) => item.trip_id === tripId) ?? [];
     return {
@@ -40,12 +46,25 @@ export default async function DashboardPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Your trips</h1>
         <div className="flex items-center gap-4">
+          <Link href="/dashboard/profile" className="text-sm underline">
+            Profile
+          </Link>
           <Link href="/dashboard/immunizations" className="text-sm underline">
             Immunization history
           </Link>
           <SignOutButton />
         </div>
       </div>
+
+      {!profile?.nationality && (
+        <p className="mb-6 rounded-lg border border-black/10 bg-black/5 p-3 text-sm">
+          Set your{" "}
+          <Link href="/dashboard/profile" className="underline">
+            nationality
+          </Link>{" "}
+          for more accurate visa guidance on your trips.
+        </p>
+      )}
 
       <Timeline trips={trips} />
 

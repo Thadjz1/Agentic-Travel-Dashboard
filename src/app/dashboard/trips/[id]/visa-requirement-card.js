@@ -4,9 +4,14 @@ import { useState } from "react";
 import { visaInfoForCountry } from "@/data/visa-catalog";
 import AddSuggestedDocumentButton from "./add-suggested-document-button";
 
-export default function VisaRequirementCard({ tripId, country, alreadyAdded }) {
+const US_ALIASES = ["united states", "usa", "us", "united states of america"];
+
+export default function VisaRequirementCard({ tripId, country, nationality, alreadyAdded }) {
   const [expanded, setExpanded] = useState(false);
   const visa = visaInfoForCountry(country);
+
+  const isUS = nationality && US_ALIASES.includes(nationality.trim().toLowerCase());
+  const nationalitySet = !!nationality;
 
   return (
     <div className="rounded-lg border border-black/10 p-3">
@@ -25,15 +30,38 @@ export default function VisaRequirementCard({ tripId, country, alreadyAdded }) {
 
       {expanded && (
         <div className="mt-2 space-y-2">
-          <p className="text-sm text-black/70">
-            For {country}: <span className="font-medium">{visa.requirement}</span>
-          </p>
-          <p className="text-xs text-black/40">
-            Based on typical rules for US passport holders — depends on your actual
-            nationality and can change over time. Confirm before booking.
-          </p>
+          {nationalitySet && !isUS ? (
+            <p className="text-sm text-amber-700">
+              This data is based on <span className="font-medium">US</span> passport
+              holders, but your profile says your nationality is{" "}
+              <span className="font-medium">{nationality}</span> — these specific
+              requirements likely do not apply to you. Check official sources for your
+              own nationality.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-black/70">
+                For {country}: <span className="font-medium">{visa.requirement}</span>
+              </p>
+              <p className="text-xs text-black/40">
+                Based on typical rules for US passport holders — depends on your
+                actual nationality and can change over time. Confirm before booking.
+              </p>
+            </>
+          )}
+
+          {!nationalitySet && (
+            <p className="text-xs text-black/40">
+              Haven&apos;t set your nationality yet?{" "}
+              <a href="/dashboard/profile" className="underline">
+                Set it in your profile
+              </a>{" "}
+              so this can be more accurate.
+            </p>
+          )}
+
           <div className="flex flex-wrap gap-4 text-sm">
-            {visa.applyUrl && (
+            {isUS && visa.applyUrl && (
               <a
                 href={visa.applyUrl}
                 target="_blank"

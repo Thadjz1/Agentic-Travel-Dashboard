@@ -14,7 +14,12 @@ const levelLabels = {
   conditional: "Depends on your trip",
 };
 
-export default function DocumentRecommendations({ tripId, country, existingDocuments }) {
+export default function DocumentRecommendations({
+  tripId,
+  country,
+  existingDocuments,
+  nationality,
+}) {
   const recommendations = documentRecommendationsForCountry(country);
 
   return (
@@ -35,6 +40,7 @@ export default function DocumentRecommendations({ tripId, country, existingDocum
               key={rec.name}
               tripId={tripId}
               country={country}
+              nationality={nationality}
               alreadyAdded={alreadyAdded}
             />
           );

@@ -1,5 +1,6 @@
 import { documentRecommendationsForCountry } from "@/data/document-catalog";
 import AddSuggestedDocumentButton from "./add-suggested-document-button";
+import VisaRequirementCard from "./visa-requirement-card";
 
 const levelStyles = {
   required: "bg-red-100 text-red-700",
@@ -27,6 +28,17 @@ export default function DocumentRecommendations({ tripId, country, existingDocum
         const alreadyAdded = existingDocuments.some(
           (d) => d.title.toLowerCase() === rec.name.toLowerCase()
         );
+
+        if (rec.doc === "visa_check") {
+          return (
+            <VisaRequirementCard
+              key={rec.name}
+              tripId={tripId}
+              country={country}
+              alreadyAdded={alreadyAdded}
+            />
+          );
+        }
 
         return (
           <div key={rec.name} className="rounded-lg border border-black/10 p-3">

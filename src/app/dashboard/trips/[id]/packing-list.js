@@ -11,6 +11,7 @@ export default function PackingList({ initialItems, categories = [] }) {
 
   const [items, setItems] = useState(initialItems);
   const [dragIndex, setDragIndex] = useState(null);
+  const [error, setError] = useState("");
 
   // Keep in sync whenever the server gives us fresh data (e.g. after adding
   // or editing an item elsewhere on the page).
@@ -30,13 +31,18 @@ export default function PackingList({ initialItems, categories = [] }) {
 
     setItems(reordered);
     setDragIndex(null);
+    setError("");
 
     // Persist the whole new order (small lists, simplest to reason about).
-    await Promise.all(
+    const results = await Promise.all(
       reordered.map((item, index) =>
         supabase.from("packing_items").update({ position: index }).eq("id", item.id)
       )
     );
+    const failed = results.find((r) => r.error);
+    if (failed) {
+      setError(`Could not save the new order: ${failed.error.message}`);
+    }
     router.refresh();
   }
 
@@ -45,20 +51,23 @@ export default function PackingList({ initialItems, categories = [] }) {
   }
 
   return (
-    <ul className="space-y-1 text-sm">
-      {items.map((packingItem, index) => (
-        <PackingRow
-          key={packingItem.id}
-          packingItem={packingItem}
-          categories={categories}
-          dragHandlers={{
-            draggable: true,
-            onDragStart: () => setDragIndex(index),
-            onDragOver: (e) => e.preventDefault(),
-            onDrop: () => handleDrop(index),
-          }}
-        />
-      ))}
-    </ul>
+    <>
+      {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
+      <ul className="space-y-1 text-sm">
+        {items.map((packingItem, index) => (
+          <PackingRow
+            key={packingItem.id}
+            packingItem={packingItem}
+            categories={categories}
+            dragHandlers={{
+              draggable: true,
+              onDragStart: () => setDragIndex(index),
+              onDragOver: (e) => e.preventDefault(),
+              onDrop: () => handleDrop(index),
+            }}
+          />
+        ))}
+      </ul>
+    </>
   );
 }

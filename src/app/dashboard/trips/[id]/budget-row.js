@@ -15,11 +15,13 @@ export default function BudgetRow({ budgetItem, nights }) {
   const [budgetPeriod, setBudgetPeriod] = useState(budgetItem.budget_period ?? "total");
   const [actualAmount, setActualAmount] = useState(budgetItem.actual_amount ?? "");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSave(e) {
     e.preventDefault();
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("budget_items")
       .update({
         category,
@@ -28,15 +30,25 @@ export default function BudgetRow({ budgetItem, nights }) {
         actual_amount: actualAmount ? Number(actualAmount) : null,
       })
       .eq("id", budgetItem.id);
-    setIsEditing(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setIsEditing(false);
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   async function handleDelete() {
     setLoading(true);
-    await supabase.from("budget_items").delete().eq("id", budgetItem.id);
-    router.refresh();
+    setError("");
+    const { error } = await supabase.from("budget_items").delete().eq("id", budgetItem.id);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.refresh();
+    }
   }
 
   if (isEditing) {
@@ -85,6 +97,7 @@ export default function BudgetRow({ budgetItem, nights }) {
             Cancel
           </button>
         </form>
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </li>
     );
   }
@@ -95,33 +108,36 @@ export default function BudgetRow({ budgetItem, nights }) {
     plannedTotal != null && budgetItem.actual_amount != null && budgetItem.actual_amount > plannedTotal;
 
   return (
-    <li className="flex items-center justify-between gap-2">
-      <span>
-        {budgetItem.category}
-        {plannedTotal != null && (
-          <span className="text-black/60">
-            {" "}
-            — planned ${plannedTotal.toFixed(2)}
-            {isScaled && (
-              <span> (${budgetItem.planned_amount}/{budgetItem.budget_period})</span>
-            )}
-          </span>
-        )}
-        {budgetItem.actual_amount != null && (
-          <span className={overBudget ? "text-red-600" : "text-black/60"}>
-            {" "}
-            — actual ${budgetItem.actual_amount}
-          </span>
-        )}
-      </span>
-      <span className="flex gap-3">
-        <button onClick={() => setIsEditing(true)} className="text-sm underline">
-          Edit
-        </button>
-        <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
-          ✕
-        </button>
-      </span>
+    <li>
+      <div className="flex items-center justify-between gap-2">
+        <span>
+          {budgetItem.category}
+          {plannedTotal != null && (
+            <span className="text-black/60">
+              {" "}
+              — planned ${plannedTotal.toFixed(2)}
+              {isScaled && (
+                <span> (${budgetItem.planned_amount}/{budgetItem.budget_period})</span>
+              )}
+            </span>
+          )}
+          {budgetItem.actual_amount != null && (
+            <span className={overBudget ? "text-red-600" : "text-black/60"}>
+              {" "}
+              — actual ${budgetItem.actual_amount}
+            </span>
+          )}
+        </span>
+        <span className="flex gap-3">
+          <button onClick={() => setIsEditing(true)} className="text-sm underline">
+            Edit
+          </button>
+          <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
+            ✕
+          </button>
+        </span>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </li>
   );
 }

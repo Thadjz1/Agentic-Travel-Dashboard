@@ -12,33 +12,48 @@ export default function DocumentRow({ doc }) {
   const [title, setTitle] = useState(doc.title);
   const [docType, setDocType] = useState(doc.doc_type ?? "");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSave(e) {
     e.preventDefault();
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("documents")
       .update({ title, doc_type: docType || null })
       .eq("id", doc.id);
-    setIsEditing(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setIsEditing(false);
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   async function handleDelete() {
     setLoading(true);
+    setError("");
     if (doc.file_path) {
       await supabase.storage.from("documents").remove([doc.file_path]);
     }
-    await supabase.from("documents").delete().eq("id", doc.id);
-    router.refresh();
+    const { error } = await supabase.from("documents").delete().eq("id", doc.id);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.refresh();
+    }
   }
 
   async function handleView() {
+    setError("");
     const { data, error } = await supabase.storage
       .from("documents")
       .createSignedUrl(doc.file_path, 60);
-    if (!error && data) {
+    if (error) {
+      setError(error.message);
+    } else {
       window.open(data.signedUrl, "_blank");
     }
   }
@@ -66,29 +81,33 @@ export default function DocumentRow({ doc }) {
             Cancel
           </button>
         </form>
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </li>
     );
   }
 
   return (
-    <li className="flex items-center justify-between gap-2">
-      <span>
-        {doc.title}
-        {doc.doc_type && <span className="text-black/60"> — {doc.doc_type}</span>}
-      </span>
-      <span className="flex gap-3">
-        {doc.file_path && (
-          <button onClick={handleView} className="text-sm underline">
-            View file
+    <li>
+      <div className="flex items-center justify-between gap-2">
+        <span>
+          {doc.title}
+          {doc.doc_type && <span className="text-black/60"> — {doc.doc_type}</span>}
+        </span>
+        <span className="flex gap-3">
+          {doc.file_path && (
+            <button onClick={handleView} className="text-sm underline">
+              View file
+            </button>
+          )}
+          <button onClick={() => setIsEditing(true)} className="text-sm underline">
+            Edit
           </button>
-        )}
-        <button onClick={() => setIsEditing(true)} className="text-sm underline">
-          Edit
-        </button>
-        <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
-          ✕
-        </button>
-      </span>
+          <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
+            ✕
+          </button>
+        </span>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </li>
   );
 }

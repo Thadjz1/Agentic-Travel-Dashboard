@@ -12,34 +12,51 @@ export default function PackingRow({ packingItem, categories = [], dragHandlers 
   const [item, setItem] = useState(packingItem.item);
   const [categoryId, setCategoryId] = useState(packingItem.category_id ?? "");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const categoryName = categories.find((c) => c.id === packingItem.category_id)?.name;
 
   async function handleSave(e) {
     e.preventDefault();
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("packing_items")
       .update({ item, category_id: categoryId || null })
       .eq("id", packingItem.id);
-    setIsEditing(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setIsEditing(false);
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   async function handleDelete() {
     setLoading(true);
-    await supabase.from("packing_items").delete().eq("id", packingItem.id);
-    router.refresh();
+    setError("");
+    const { error } = await supabase.from("packing_items").delete().eq("id", packingItem.id);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.refresh();
+    }
   }
 
   async function handleTogglePacked(e) {
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("packing_items")
       .update({ is_packed: e.target.checked })
       .eq("id", packingItem.id);
-    router.refresh();
+    if (error) {
+      setError(error.message);
+    } else {
+      router.refresh();
+    }
     setLoading(false);
   }
 
@@ -74,34 +91,38 @@ export default function PackingRow({ packingItem, categories = [], dragHandlers 
             Cancel
           </button>
         </form>
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </li>
     );
   }
 
   return (
-    <li
-      {...dragHandlers}
-      className="flex cursor-grab items-center justify-between gap-2 active:cursor-grabbing"
-    >
-      <span className="flex items-center gap-2">
-        <span className="text-black/30">⠿</span>
-        <input
-          type="checkbox"
-          defaultChecked={packingItem.is_packed}
-          onChange={handleTogglePacked}
-          disabled={loading}
-        />
-        {packingItem.item}
-        {categoryName && <span className="text-xs text-black/40">({categoryName})</span>}
-      </span>
-      <span className="flex gap-3">
-        <button onClick={() => setIsEditing(true)} className="text-sm underline">
-          Edit
-        </button>
-        <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
-          ✕
-        </button>
-      </span>
+    <li>
+      <div
+        {...dragHandlers}
+        className="flex cursor-grab items-center justify-between gap-2 active:cursor-grabbing"
+      >
+        <span className="flex items-center gap-2">
+          <span className="text-black/30">⠿</span>
+          <input
+            type="checkbox"
+            defaultChecked={packingItem.is_packed}
+            onChange={handleTogglePacked}
+            disabled={loading}
+          />
+          {packingItem.item}
+          {categoryName && <span className="text-xs text-black/40">({categoryName})</span>}
+        </span>
+        <span className="flex gap-3">
+          <button onClick={() => setIsEditing(true)} className="text-sm underline">
+            Edit
+          </button>
+          <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
+            ✕
+          </button>
+        </span>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </li>
   );
 }

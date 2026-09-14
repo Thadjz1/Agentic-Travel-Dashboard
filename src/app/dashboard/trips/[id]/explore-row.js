@@ -15,32 +15,49 @@ export default function ExploreRow({ item }) {
   const [notes, setNotes] = useState(item.notes ?? "");
   const [link, setLink] = useState(item.link ?? "");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSave(e) {
     e.preventDefault();
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("explore_items")
       .update({ name, category, notes: notes || null, link: link || null })
       .eq("id", item.id);
-    setIsEditing(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setIsEditing(false);
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   async function handleDelete() {
     setLoading(true);
-    await supabase.from("explore_items").delete().eq("id", item.id);
-    router.refresh();
+    setError("");
+    const { error } = await supabase.from("explore_items").delete().eq("id", item.id);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.refresh();
+    }
   }
 
   async function handleToggleVisited(e) {
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("explore_items")
       .update({ is_visited: e.target.checked })
       .eq("id", item.id);
-    router.refresh();
+    if (error) {
+      setError(error.message);
+    } else {
+      router.refresh();
+    }
     setLoading(false);
   }
 
@@ -85,38 +102,42 @@ export default function ExploreRow({ item }) {
             Cancel
           </button>
         </form>
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </li>
     );
   }
 
   return (
-    <li className="flex items-center justify-between gap-2">
-      <span className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          defaultChecked={item.is_visited}
-          onChange={handleToggleVisited}
-          disabled={loading}
-        />
-        <span className={item.is_visited ? "line-through text-black/40" : ""}>
-          {item.name}
+    <li>
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            defaultChecked={item.is_visited}
+            onChange={handleToggleVisited}
+            disabled={loading}
+          />
+          <span className={item.is_visited ? "line-through text-black/40" : ""}>
+            {item.name}
+          </span>
+          <span className="text-xs text-black/40">({exploreCategoryLabel(item.category)})</span>
+          {item.notes && <span className="text-black/60">— {item.notes}</span>}
+          {item.link && (
+            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm underline">
+              link
+            </a>
+          )}
         </span>
-        <span className="text-xs text-black/40">({exploreCategoryLabel(item.category)})</span>
-        {item.notes && <span className="text-black/60">— {item.notes}</span>}
-        {item.link && (
-          <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm underline">
-            link
-          </a>
-        )}
-      </span>
-      <span className="flex gap-3">
-        <button onClick={() => setIsEditing(true)} className="text-sm underline">
-          Edit
-        </button>
-        <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
-          ✕
-        </button>
-      </span>
+        <span className="flex gap-3">
+          <button onClick={() => setIsEditing(true)} className="text-sm underline">
+            Edit
+          </button>
+          <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
+            ✕
+          </button>
+        </span>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </li>
   );
 }

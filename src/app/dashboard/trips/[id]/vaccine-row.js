@@ -13,32 +13,49 @@ export default function VaccineRow({ vaccine }) {
   const [name, setName] = useState(vaccine.name);
   const [requiredByDate, setRequiredByDate] = useState(vaccine.required_by_date ?? "");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSave(e) {
     e.preventDefault();
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("vaccines")
       .update({ name, required_by_date: requiredByDate || null })
       .eq("id", vaccine.id);
-    setIsEditing(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setIsEditing(false);
+      router.refresh();
+    }
     setLoading(false);
-    router.refresh();
   }
 
   async function handleDelete() {
     setLoading(true);
-    await supabase.from("vaccines").delete().eq("id", vaccine.id);
-    router.refresh();
+    setError("");
+    const { error } = await supabase.from("vaccines").delete().eq("id", vaccine.id);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      router.refresh();
+    }
   }
 
   async function handleToggleDone(e) {
     setLoading(true);
-    await supabase
+    setError("");
+    const { error } = await supabase
       .from("vaccines")
       .update({ completed_date: e.target.checked ? new Date().toISOString().slice(0, 10) : null })
       .eq("id", vaccine.id);
-    router.refresh();
+    if (error) {
+      setError(error.message);
+    } else {
+      router.refresh();
+    }
     setLoading(false);
   }
 
@@ -65,37 +82,41 @@ export default function VaccineRow({ vaccine }) {
             Cancel
           </button>
         </form>
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </li>
     );
   }
 
   return (
-    <li className="flex items-center justify-between gap-2">
-      <span className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          defaultChecked={!!vaccine.completed_date}
-          onChange={handleToggleDone}
-          disabled={loading}
-        />
-        {vaccine.name}
-        {vaccine.dose_number && (
-          <span className="text-black/60">
-            (dose {vaccine.dose_number} of {vaccine.total_doses})
-          </span>
-        )}
-        {vaccine.required_by_date && (
-          <span className="text-black/60">— needed by {formatDate(vaccine.required_by_date)}</span>
-        )}
-      </span>
-      <span className="flex gap-3">
-        <button onClick={() => setIsEditing(true)} className="text-sm underline">
-          Edit
-        </button>
-        <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
-          ✕
-        </button>
-      </span>
+    <li>
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            defaultChecked={!!vaccine.completed_date}
+            onChange={handleToggleDone}
+            disabled={loading}
+          />
+          {vaccine.name}
+          {vaccine.dose_number && (
+            <span className="text-black/60">
+              (dose {vaccine.dose_number} of {vaccine.total_doses})
+            </span>
+          )}
+          {vaccine.required_by_date && (
+            <span className="text-black/60">— needed by {formatDate(vaccine.required_by_date)}</span>
+          )}
+        </span>
+        <span className="flex gap-3">
+          <button onClick={() => setIsEditing(true)} className="text-sm underline">
+            Edit
+          </button>
+          <button onClick={handleDelete} disabled={loading} className="text-black/40 hover:text-red-600 disabled:opacity-50" aria-label="Delete">
+            ✕
+          </button>
+        </span>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </li>
   );
 }

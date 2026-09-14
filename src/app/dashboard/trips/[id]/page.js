@@ -14,6 +14,7 @@ import BudgetSummary from "./budget-summary";
 import AddExploreItemForm from "./add-explore-item-form";
 import ExploreRow from "./explore-row";
 import TripHeader from "./trip-header";
+import TripTabs from "./trip-tabs";
 import PackingProgress from "@/app/dashboard/packing-progress";
 import { daysBetween } from "@/utils/format-date";
 
@@ -89,81 +90,81 @@ export default async function TripDetailPage({ params }) {
         />
       </div>
 
-      <section className="mb-8 space-y-3">
-        <h2 className="font-medium">Docs</h2>
+      <TripTabs
+        docsContent={
+          <div className="space-y-3">
+            <DocumentRecommendations
+              tripId={id}
+              country={trip.country}
+              existingDocuments={documents ?? []}
+              nationality={profile?.nationality ?? null}
+            />
 
-        <DocumentRecommendations
-          tripId={id}
-          country={trip.country}
-          existingDocuments={documents ?? []}
-          nationality={profile?.nationality ?? null}
-        />
+            <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>
+            <ul className="space-y-1 text-sm">
+              {documents?.length === 0 && <li className="text-black/60">None yet</li>}
+              {documents?.map((doc) => (
+                <DocumentRow key={doc.id} doc={doc} />
+              ))}
+            </ul>
+            <AddDocumentForm tripId={id} />
+          </div>
+        }
+        healthContent={
+          <div className="space-y-3">
+            <Link href="/dashboard/immunizations" className="text-sm underline">
+              Manage your immunization history →
+            </Link>
 
-        <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>
-        <ul className="space-y-1 text-sm">
-          {documents?.length === 0 && <li className="text-black/60">None yet</li>}
-          {documents?.map((doc) => (
-            <DocumentRow key={doc.id} doc={doc} />
-          ))}
-        </ul>
-        <AddDocumentForm tripId={id} />
-      </section>
+            <VaccineRecommendations
+              tripId={id}
+              country={trip.country}
+              arrivalDate={trip.arrival_date}
+              existingVaccines={vaccines ?? []}
+              existingImmunizations={immunizations ?? []}
+            />
 
-      <section className="mb-8 space-y-3">
-        <h2 className="font-medium">Health</h2>
-        <Link href="/dashboard/immunizations" className="text-sm underline">
-          Manage your immunization history →
-        </Link>
-
-        <VaccineRecommendations
-          tripId={id}
-          country={trip.country}
-          arrivalDate={trip.arrival_date}
-          existingVaccines={vaccines ?? []}
-          existingImmunizations={immunizations ?? []}
-        />
-
-        <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>
-        <ul className="space-y-1 text-sm">
-          {vaccines?.length === 0 && <li className="text-black/60">None yet</li>}
-          {vaccines?.map((vaccine) => (
-            <VaccineRow key={vaccine.id} vaccine={vaccine} />
-          ))}
-        </ul>
-        <AddVaccineForm tripId={id} />
-      </section>
-
-      <section className="mb-8 space-y-3">
-        <h2 className="font-medium">Packing</h2>
-        <PackingSection
-          tripId={id}
-          initialItems={packingItems ?? []}
-          initialCategories={packingCategories ?? []}
-        />
-      </section>
-
-      <section className="mb-8 space-y-3">
-        <h2 className="font-medium">Budget</h2>
-        <BudgetSummary budgetItems={budgetItems ?? []} nights={nights} />
-        <ul className="space-y-1 text-sm">
-          {budgetItems?.length === 0 && <li className="text-black/60">None yet</li>}
-          {budgetItems?.map((budgetItem) => (
-            <BudgetRow key={budgetItem.id} budgetItem={budgetItem} nights={nights} />
-          ))}
-        </ul>
-        <AddBudgetItemForm tripId={id} nights={nights} />
-      </section>
-
-      <section className="mb-8 space-y-3">
-        <h2 className="font-medium">Explore</h2>
-        <ul className="space-y-1 text-sm">
-          {exploreItems?.length === 0 && <li className="text-black/60">None yet</li>}
-          {exploreItems?.map((item) => (
-            <ExploreRow key={item.id} item={item} />
-          ))}
-        </ul>
-        <AddExploreItemForm tripId={id} />
-      </section>
+            <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>
+            <ul className="space-y-1 text-sm">
+              {vaccines?.length === 0 && <li className="text-black/60">None yet</li>}
+              {vaccines?.map((vaccine) => (
+                <VaccineRow key={vaccine.id} vaccine={vaccine} />
+              ))}
+            </ul>
+            <AddVaccineForm tripId={id} />
+          </div>
+        }
+        packingContent={
+          <PackingSection
+            tripId={id}
+            initialItems={packingItems ?? []}
+            initialCategories={packingCategories ?? []}
+          />
+        }
+        budgetContent={
+          <div className="space-y-3">
+            <BudgetSummary budgetItems={budgetItems ?? []} nights={nights} />
+            <ul className="space-y-1 text-sm">
+              {budgetItems?.length === 0 && <li className="text-black/60">None yet</li>}
+              {budgetItems?.map((budgetItem) => (
+                <BudgetRow key={budgetItem.id} budgetItem={budgetItem} nights={nights} />
+              ))}
+            </ul>
+            <AddBudgetItemForm tripId={id} nights={nights} />
+          </div>
+        }
+        exploreContent={
+          <div className="space-y-3">
+            <ul className="space-y-1 text-sm">
+              {exploreItems?.length === 0 && <li className="text-black/60">None yet</li>}
+              {exploreItems?.map((item) => (
+                <ExploreRow key={item.id} item={item} />
+              ))}
+            </ul>
+            <AddExploreItemForm tripId={id} />
+          </div>
+        }
+      />
     </div>
   );
 }

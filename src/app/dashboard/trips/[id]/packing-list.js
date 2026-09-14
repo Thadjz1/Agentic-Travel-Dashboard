@@ -13,8 +13,6 @@ export default function PackingList({ initialItems, categories = [] }) {
   const [dragIndex, setDragIndex] = useState(null);
   const [error, setError] = useState("");
 
-  // Keep in sync whenever the server gives us fresh data (e.g. after adding
-  // or editing an item elsewhere on the page).
   useEffect(() => {
     setItems(initialItems);
   }, [initialItems]);
@@ -33,7 +31,6 @@ export default function PackingList({ initialItems, categories = [] }) {
     setDragIndex(null);
     setError("");
 
-    // Persist the whole new order (small lists, simplest to reason about).
     const results = await Promise.all(
       reordered.map((item, index) =>
         supabase.from("packing_items").update({ position: index }).eq("id", item.id)
@@ -41,7 +38,7 @@ export default function PackingList({ initialItems, categories = [] }) {
     );
     const failed = results.find((r) => r.error);
     if (failed) {
-      setError(`Could not save the new order: ${failed.error.message}`);
+      setError("Could not save the new order: " + failed.error.message);
     }
     router.refresh();
   }
@@ -51,7 +48,7 @@ export default function PackingList({ initialItems, categories = [] }) {
   }
 
   return (
-    <>
+    <div>
       {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
       <ul className="space-y-1 text-sm">
         {items.map((packingItem, index) => (
@@ -68,6 +65,6 @@ export default function PackingList({ initialItems, categories = [] }) {
           />
         ))}
       </ul>
-    </>
+    </div>
   );
 }

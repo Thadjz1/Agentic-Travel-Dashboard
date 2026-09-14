@@ -46,6 +46,21 @@ export default function DocumentRow({ doc }) {
     }
   }
 
+  async function handleToggleObtained(e) {
+    setLoading(true);
+    setError("");
+    const { error } = await supabase
+      .from("documents")
+      .update({ is_obtained: e.target.checked })
+      .eq("id", doc.id);
+    if (error) {
+      setError(error.message);
+    } else {
+      router.refresh();
+    }
+    setLoading(false);
+  }
+
   async function handleView() {
     setError("");
     const { data, error } = await supabase.storage
@@ -89,7 +104,13 @@ export default function DocumentRow({ doc }) {
   return (
     <li>
       <div className="flex items-center justify-between gap-2">
-        <span>
+        <span className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            defaultChecked={doc.is_obtained}
+            onChange={handleToggleObtained}
+            disabled={loading}
+          />
           {doc.title}
           {doc.doc_type && <span className="text-black/60"> — {doc.doc_type}</span>}
         </span>

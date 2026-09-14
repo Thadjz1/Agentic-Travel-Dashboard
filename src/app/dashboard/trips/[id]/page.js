@@ -8,6 +8,7 @@ import DocumentRow from "./document-row";
 import VaccineRow from "./vaccine-row";
 import PackingSection from "./packing-section";
 import VaccineRecommendations from "./vaccine-recommendations";
+import DocumentRecommendations from "./document-recommendations";
 import BudgetRow from "./budget-row";
 import BudgetSummary from "./budget-summary";
 import AddExploreItemForm from "./add-explore-item-form";
@@ -84,6 +85,14 @@ export default async function TripDetailPage({ params }) {
 
       <section className="mb-8 space-y-3">
         <h2 className="font-medium">Docs</h2>
+
+        <DocumentRecommendations
+          tripId={id}
+          country={trip.country}
+          existingDocuments={documents ?? []}
+        />
+
+        <h3 className="pt-2 text-sm font-medium text-black/60">Your list</h3>
         <ul className="space-y-1 text-sm">
           {documents?.length === 0 && <li className="text-black/60">None yet</li>}
           {documents?.map((doc) => (

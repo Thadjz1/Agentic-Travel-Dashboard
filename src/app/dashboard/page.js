@@ -52,6 +52,9 @@ export default async function DashboardPage() {
           <Link href="/dashboard/immunizations" className="text-sm underline">
             Immunization history
           </Link>
+          <Link href="/dashboard/vault" className="text-sm underline">
+            Vault
+          </Link>
           <SignOutButton />
         </div>
       </div>
